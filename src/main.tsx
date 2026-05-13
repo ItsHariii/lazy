@@ -1,10 +1,9 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { App } from "./app/App";
-import "./styles/globals.css";
-
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+import "./design/app.css";
+import "./design/tweaks-panel";
+import "./design/data";
+import "./design/icons";
+import "./design/parseQuickAdd";
+import "./design/ui";
+import "./design/screens-main";
+import "./design/screens-other";
+import "./design/app";
