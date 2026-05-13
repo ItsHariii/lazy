@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { env } from "./env";
+import { env } from "./env.js";
 
 const PRICING: Record<string, { in: number; out: number }> = {
   "claude-haiku-4-5-20251001": { in: 1, out: 5 },

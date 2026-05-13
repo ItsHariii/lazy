@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { env, assertSupabaseAdmin } from "./env";
+import { env, assertSupabaseAdmin } from "./env.js";
 
 export function createSupabaseAdminClient() {
   assertSupabaseAdmin();

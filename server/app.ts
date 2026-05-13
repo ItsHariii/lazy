@@ -1,9 +1,9 @@
 import { Hono } from "hono";
-import { canvasRoute } from "./routes/canvas";
-import { icollegeRoute } from "./routes/icollege";
-import { notificationsRoute } from "./routes/notifications";
-import { syllabusRoute } from "./routes/syllabus";
-import { emailConfigured, env, pushConfigured } from "./lib/env";
+import { canvasRoute } from "./routes/canvas.js";
+import { icollegeRoute } from "./routes/icollege.js";
+import { notificationsRoute } from "./routes/notifications.js";
+import { syllabusRoute } from "./routes/syllabus.js";
+import { emailConfigured, env, pushConfigured } from "./lib/env.js";
 
 export const app = new Hono();
 

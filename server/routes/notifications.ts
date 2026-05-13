@@ -1,7 +1,7 @@
 import { Hono, type Context } from "hono";
 import webPush from "web-push";
-import { createSupabaseAdminClient } from "../lib/supabase";
-import { emailConfigured, env, pushConfigured } from "../lib/env";
+import { createSupabaseAdminClient } from "../lib/supabase.js";
+import { emailConfigured, env, pushConfigured } from "../lib/env.js";
 
 type NotificationPreferences = {
   user_id: string;

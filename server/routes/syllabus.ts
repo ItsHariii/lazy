@@ -2,10 +2,10 @@ import { Hono } from "hono";
 import Anthropic from "@anthropic-ai/sdk";
 import mammoth from "mammoth";
 import { createRequire } from "node:module";
-import { env, assertAnthropic } from "../lib/env";
-import { perHour } from "../lib/rateLimit";
-import { preflightBudget, recordUsage, estimateTokens } from "../lib/costGuard";
-import { pickColor, type NormalizedAssignment, type NormalizedCourse } from "../lib/normalize";
+import { env, assertAnthropic } from "../lib/env.js";
+import { perHour } from "../lib/rateLimit.js";
+import { preflightBudget, recordUsage, estimateTokens } from "../lib/costGuard.js";
+import { pickColor, type NormalizedAssignment, type NormalizedCourse } from "../lib/normalize.js";
 
 const require = createRequire(import.meta.url);
 let pdfParseImpl: ((buf: Buffer) => Promise<{ text: string }>) | null = null;

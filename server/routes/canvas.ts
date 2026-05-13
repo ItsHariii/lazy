@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import ical from "node-ical";
-import { env, assertCanvas } from "../lib/env";
-import { perHour } from "../lib/rateLimit";
-import { pickColor, deriveStatus, type NormalizedAssignment, type NormalizedCourse } from "../lib/normalize";
+import { env, assertCanvas } from "../lib/env.js";
+import { perHour } from "../lib/rateLimit.js";
+import { pickColor, deriveStatus, type NormalizedAssignment, type NormalizedCourse } from "../lib/normalize.js";
 
 export const canvasRoute = new Hono();
 
