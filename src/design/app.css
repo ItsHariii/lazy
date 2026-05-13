@@ -3600,22 +3600,42 @@ body[data-theme="dark"] .auth__segment button[aria-pressed="true"]:hover {
   }
   input, textarea, select { font-size: 16px; }
 
-  .workspace { padding: 12px 12px 24px; }
+  .workspace {
+    padding: 12px 12px 24px;
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
   .workspace__inner {
     grid-template-columns: 1fr;
     gap: 16px;
+    max-width: 100%;
   }
+  .shell { max-width: 100vw; overflow-x: hidden; }
 
   /* Topbar */
   .topbar {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto;
-    padding: 10px 14px 6px;
-    gap: 8px;
+    column-gap: 8px;
+    row-gap: 0;
+    padding: 10px 12px 6px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    overflow: hidden;
   }
-  .topbar::before, .topbar::after { left: 14px; right: 14px; }
-  .topbar__brand { grid-column: 1; }
-  .topbar__name { font-size: 26px; line-height: 1; }
+  .topbar::before, .topbar::after { left: 12px; right: 12px; }
+  .topbar__brand {
+    grid-column: 1;
+    grid-row: 1;
+    align-items: flex-start;
+    text-align: left;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .topbar__name { font-size: 24px; line-height: 1; }
   .topbar__kicker { display: none; }
   .topbar__left { display: none; }
   .topbar__right {
@@ -3623,40 +3643,39 @@ body[data-theme="dark"] .auth__segment button[aria-pressed="true"]:hover {
     grid-row: 1;
     justify-self: end;
     align-self: center;
-    gap: 6px;
+    gap: 4px;
+    flex-shrink: 0;
   }
   .topbar__right .topbar__theme,
   .topbar__right .topbar__profile {
-    width: 34px;
-    height: 34px;
-    min-height: 34px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
     padding: 0;
+    flex-shrink: 0;
   }
+  /* Icon-only "New" button on phone — saves ~50px */
   .topbar__right .topbar__link--primary {
-    padding: 6px 10px;
-    font-size: 12px;
-    min-height: 34px;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    justify-content: center;
+    gap: 0;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .topbar__right .topbar__link--primary > span:not(.topbar__count) {
+    display: none;
   }
   .topbar__menu {
     position: fixed;
     right: 12px;
     left: 12px;
-    top: 64px;
+    top: 60px;
     width: auto;
     max-width: none;
     z-index: 60;
-  }
-  .topbar {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    column-gap: 8px;
-    row-gap: 4px;
-  }
-  .topbar__brand {
-    grid-column: 1;
-    grid-row: 1;
-    align-items: flex-start;
-    text-align: left;
   }
 
   /* Bottom tab bar */
