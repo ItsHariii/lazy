@@ -1,4 +1,4 @@
-/* global React, Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, Search, EmptyState, Menu, MenuItem, AssignmentRow,
+/* global React, Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, Search, EmptyState, Menu, MenuItem, AssignmentRow, Collapsible, useIsMobile,
    COURSES, ASSIGNMENTS, SOURCES, TODAY, getCourse, getAssignment, formatDueRelative, formatDay, formatTime, formatLong, bucketize, SOURCE_LABEL, SOURCE_ICON, DOW, MONTHS */
 
 const { useState: useStateO, useMemo: useMemoO } = React;
@@ -181,18 +181,20 @@ function SourcesPage() {
 // Calendar Page (Month + Week)
 // ============================================================
 function CalendarPage({ assignments, onOpen }) {
-  const [view, setView] = useStateO("month");
+  const isMobile = useIsMobile();
+  const [view, setView] = useStateO(isMobile ? "agenda" : "month");
   const [cursor, setCursor] = useStateO(() => {
     const t = new Date(TODAY);
     t.setDate(1);
     return t;
   });
 
+  const effectiveView = isMobile ? "agenda" : view;
   const monthLabel = `${MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}`;
 
   function shift(dir) {
     const nx = new Date(cursor);
-    if (view === "month") nx.setMonth(nx.getMonth() + dir);
+    if (effectiveView === "month" || effectiveView === "agenda") nx.setMonth(nx.getMonth() + dir);
     else nx.setDate(nx.getDate() + dir * 7);
     setCursor(nx);
   }
@@ -206,17 +208,87 @@ function CalendarPage({ assignments, onOpen }) {
           <p className="page-header__sub">All courses, every source. Click any item to open its details.</p>
         </div>
         <div className="page-header__actions">
-          <Tabs value={view} onChange={setView} options={[
-            { label: "Month", value: "month" },
-            { label: "Week", value: "week" },
-          ]} />
+          {!isMobile ? (
+            <Tabs value={view} onChange={setView} options={[
+              { label: "Month", value: "month" },
+              { label: "Week", value: "week" },
+            ]} />
+          ) : null}
           <Button variant="ghost" size="sm" icon="chevronLeft" aria-label="Previous" onClick={() => shift(-1)} />
           <Button size="sm" onClick={() => setCursor(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1))}>Today</Button>
           <Button variant="ghost" size="sm" icon="chevronRight" aria-label="Next" onClick={() => shift(1)} />
         </div>
       </header>
 
-      {view === "month" ? <MonthView cursor={cursor} assignments={assignments} onOpen={onOpen} /> : <WeekView cursor={cursor} assignments={assignments} onOpen={onOpen} />}
+      {effectiveView === "agenda"
+        ? <AgendaView cursor={cursor} assignments={assignments} onOpen={onOpen} />
+        : effectiveView === "month"
+          ? <MonthView cursor={cursor} assignments={assignments} onOpen={onOpen} />
+          : <WeekView cursor={cursor} assignments={assignments} onOpen={onOpen} />}
+    </div>
+  );
+}
+
+function AgendaView({ cursor, assignments, onOpen }) {
+  const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const last  = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+  const todayKey = new Date(TODAY).toDateString();
+
+  const groups = useMemoO(() => {
+    const map = new Map();
+    for (const a of assignments) {
+      const dt = new Date(a.dueAt);
+      if (dt < first || dt > last) continue;
+      const key = dt.toDateString();
+      if (!map.has(key)) map.set(key, { dt: new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()), items: [] });
+      map.get(key).items.push(a);
+    }
+    const arr = Array.from(map.values()).sort((a, b) => a.dt - b.dt);
+    arr.forEach(g => g.items.sort((x, y) => new Date(x.dueAt) - new Date(y.dueAt)));
+    return arr;
+  }, [assignments, cursor]);
+
+  if (groups.length === 0) {
+    return <EmptyState icon="calendar" title="Nothing scheduled this month" body="Try a different month, or check your sources." />;
+  }
+
+  return (
+    <div className="agenda">
+      {groups.map(g => {
+        const isToday = g.dt.toDateString() === todayKey;
+        return (
+          <section key={g.dt.toISOString()} className={`agenda__day ${isToday ? "agenda__day--today" : ""}`}>
+            <header className="agenda__head">
+              <span className="agenda__dow">{DOW[g.dt.getDay()]}</span>
+              <span className="agenda__date">
+                <b>{g.dt.getDate()}</b>
+                <span>{MONTHS[g.dt.getMonth()].slice(0,3)}</span>
+              </span>
+              {isToday ? <span className="agenda__today-tag">Today</span> : null}
+              <span className="agenda__count">{g.items.length} {g.items.length === 1 ? "item" : "items"}</span>
+            </header>
+            <ul className="agenda__list">
+              {g.items.map(a => {
+                const c = getCourse(a.courseId);
+                return (
+                  <li key={a.id}>
+                    <button className="agenda__item" onClick={() => onOpen(a)}>
+                      <span className={`agenda__rail color-${c.color}`} aria-hidden="true" />
+                      <span className="agenda__title">{a.title}</span>
+                      <span className="agenda__meta">
+                        <CourseSwatch color={c.color} kind="dot" />
+                        <span>{c.code}</span>
+                        <span className="agenda__sep">·</span>
+                        <span>{formatTime(a.dueAt)}</span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -411,6 +483,7 @@ function CoursesPage({ assignments, onOpen }) {
 // Settings Page
 // ============================================================
 function SettingsPage() {
+  const isMobile = useIsMobile();
   const [section, setSection] = useStateO("reminders");
   const [emailDigest, setEmailDigest] = useStateO(true);
   const [push, setPush] = useStateO(true);
@@ -426,6 +499,23 @@ function SettingsPage() {
     { id: "account",    label: "Account" },
   ];
 
+  const showSection = (id) => isMobile || section === id;
+  const Wrap = ({ id, title, children }) => {
+    if (isMobile) {
+      return (
+        <Collapsible mobileOnly title={title} className="settings-section settings-section--collapsible" defaultOpen={id === "reminders"}>
+          {children}
+        </Collapsible>
+      );
+    }
+    return showSection(id) ? (
+      <>
+        <h2>{title}</h2>
+        {children}
+      </>
+    ) : null;
+  };
+
   return (
     <div className="main">
       <header className="page-header">
@@ -437,20 +527,21 @@ function SettingsPage() {
       </header>
 
       <div className="settings-grid">
-        <nav className="settings-nav" aria-label="Settings sections">
-          {sections.map(s => (
-            <button key={s.id}
-                    aria-current={section === s.id}
-                    onClick={() => setSection(s.id)}>
-              {s.label}
-            </button>
-          ))}
-        </nav>
+        {!isMobile ? (
+          <nav className="settings-nav" aria-label="Settings sections">
+            {sections.map(s => (
+              <button key={s.id}
+                      aria-current={section === s.id}
+                      onClick={() => setSection(s.id)}>
+                {s.label}
+              </button>
+            ))}
+          </nav>
+        ) : null}
 
         <div className="settings-section">
-          {section === "reminders" ? (
-            <>
-              <h2>Reminders</h2>
+          {showSection("reminders") ? (
+            <Wrap id="reminders" title="Reminders">
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="1 day before — email"
                       sub="Sent the morning of the day before each due date."
@@ -465,12 +556,11 @@ function SettingsPage() {
                       sub="No reminders between 10 PM and 7 AM."
                       ctrl={<Button size="sm">10 PM – 7 AM</Button>} />
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "calendar" ? (
-            <>
-              <h2>Calendar</h2>
+          {showSection("calendar") ? (
+            <Wrap id="calendar" title="Calendar">
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="Apple Calendar export"
                       sub="A read-only feed (.ics) you can subscribe to from any calendar app."
@@ -481,12 +571,11 @@ function SettingsPage() {
                 <SRow title="Show completed assignments"
                       ctrl={<Toggle checked={false} onChange={() => {}} />} />
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "sources" ? (
-            <>
-              <h2>Source preferences</h2>
+          {showSection("sources") ? (
+            <Wrap id="sources" title="Source preferences">
               <p style={{ color: "var(--text-muted)", margin: 0, fontSize: 13.5 }}>How aggressively each source pulls.</p>
               <div className="card" style={{ padding: "0 16px" }}>
                 {SOURCES.map(s => (
@@ -496,12 +585,11 @@ function SettingsPage() {
                         ctrl={<Toggle checked={s.status !== "off"} onChange={() => {}} />} />
                 ))}
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "browser" ? (
-            <>
-              <h2>Browser helper</h2>
+          {showSection("browser") ? (
+            <Wrap id="browser" title="Browser helper">
               <article className="card settings-card">
                 <h3 className="serif" style={{ margin: 0, fontWeight: 500, fontSize: 16 }}>Permissions</h3>
                 <p style={{ margin: 0, color: "var(--text-muted)", fontSize: 13 }}>
@@ -533,12 +621,11 @@ function SettingsPage() {
                       sub="Disable scanning entirely without disconnecting."
                       ctrl={<Toggle checked={false} onChange={() => {}} />} />
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "privacy" ? (
-            <>
-              <h2>Privacy</h2>
+          {showSection("privacy") ? (
+            <Wrap id="privacy" title="Privacy">
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="Anonymous usage analytics"
                       sub="Helps us improve assignment detection. No assignment text is sent."
@@ -550,12 +637,11 @@ function SettingsPage() {
                       sub="Removes all captured snippets from past scans."
                       ctrl={<Button size="sm" variant="danger">Clear</Button>} />
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "account" ? (
-            <>
-              <h2>Account</h2>
+          {showSection("account") ? (
+            <Wrap id="account" title="Account">
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="Email"
                       sub="jordan.kim@example.edu"
@@ -567,7 +653,7 @@ function SettingsPage() {
                       sub="Permanently remove your account, assignments, and connections. This cannot be undone."
                       ctrl={<Button size="sm" variant="danger" icon="trash">Delete account</Button>} />
               </div>
-            </>
+            </Wrap>
           ) : null}
         </div>
       </div>

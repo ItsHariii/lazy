@@ -52,6 +52,7 @@
 }
 
 * { box-sizing: border-box; }
+* { -webkit-tap-highlight-color: transparent; }
 
 html, body {
   margin: 0;
@@ -62,6 +63,18 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums lining-nums;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }
 
 .serif, .display {
@@ -3458,4 +3471,325 @@ body[data-theme="dark"] .auth__segment button[aria-pressed="true"] {
 body[data-theme="dark"] .auth__segment button[aria-pressed="true"]:hover {
   background: var(--text-muted);
   color: var(--bg);
+}
+
+/* ============================================================
+   Collapsible primitive
+   ============================================================ */
+.collapsible { display: block; }
+.collapsible__head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  min-height: 44px;
+  cursor: pointer;
+}
+.collapsible__title {
+  font-family: "Source Serif 4", Georgia, serif;
+  font-weight: 500;
+  font-size: 15px;
+  flex: 1;
+  min-width: 0;
+}
+.collapsible__badge {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.collapsible__body {
+  padding: 12px 14px 14px;
+  display: grid;
+  gap: 12px;
+}
+.collapsible:not(.is-open) .collapsible__body {
+  display: none;
+}
+.collapsible:not(.is-open) .collapsible__head {
+  border-bottom: 0;
+}
+
+/* On desktop, mobile-only collapsibles render as plain sections */
+@media (min-width: 769px) {
+  .collapsible--mobile-only .collapsible__head { display: none; }
+  .collapsible--mobile-only .collapsible__body { display: grid; padding: 0; }
+  .collapsible--mobile-only.detail-section--collapsible .collapsible__body { gap: 10px; }
+}
+
+/* ============================================================
+   Agenda View (mobile calendar)
+   ============================================================ */
+.agenda { display: grid; gap: 14px; }
+.agenda__day {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.agenda__day--today { border-color: var(--text); }
+.agenda__head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid var(--border);
+}
+.agenda__dow {
+  font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-soft); font-weight: 700;
+}
+.agenda__date {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  font-family: "Source Serif 4", Georgia, serif;
+}
+.agenda__date b { font-size: 18px; font-weight: 500; }
+.agenda__date span { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.agenda__today-tag {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--text); color: var(--bg); padding: 2px 8px; border-radius: 999px;
+}
+.agenda__count {
+  margin-left: auto; font-size: 11.5px; color: var(--text-muted);
+}
+.agenda__list { list-style: none; margin: 0; padding: 0; }
+.agenda__item {
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 0; border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-height: 56px;
+}
+.agenda__list li:last-child .agenda__item { border-bottom: 0; }
+.agenda__rail {
+  border-radius: 2px;
+  align-self: stretch;
+}
+.agenda__title {
+  display: block;
+  font-size: 14.5px; font-weight: 500;
+  line-height: 1.35;
+}
+.agenda__meta {
+  display: flex; gap: 6px; align-items: center;
+  margin-top: 4px;
+  font-size: 12px; color: var(--text-muted);
+}
+.agenda__sep { opacity: 0.5; }
+
+/* ============================================================
+   PHONE (≤768px) — single-column, fullscreen, large taps
+   ============================================================ */
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+  input, textarea, select { font-size: 16px; }
+
+  .workspace { padding: 12px 12px 24px; }
+  .workspace__inner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Topbar */
+  .topbar {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    padding: 10px 14px 6px;
+    gap: 8px;
+  }
+  .topbar::before, .topbar::after { left: 14px; right: 14px; }
+  .topbar__brand { grid-column: 1; }
+  .topbar__name { font-size: 30px; line-height: 1; }
+  .topbar__kicker { font-size: 10.5px; }
+  .topbar__left, .topbar__right { display: none; }
+
+  /* Bottom tab bar */
+  .topbar__nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: stretch;
+    justify-content: space-around;
+    gap: 0;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(60, 40, 20, 0.06);
+    z-index: 40;
+    overflow-x: visible;
+  }
+  .topbar__nav > * {
+    flex: 1;
+    min-height: 48px;
+    font-size: 11px;
+    text-align: center;
+    padding: 6px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: var(--text-muted);
+  }
+  .topbar__nav > [aria-current="page"] {
+    color: var(--text);
+    background: var(--surface-subtle);
+    font-weight: 600;
+  }
+  .topbar__nav .topbar__count {
+    margin-left: 4px;
+    background: var(--text);
+    color: var(--bg);
+    border-radius: 999px;
+    font-size: 10px;
+    padding: 0 5px;
+    min-width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Right rail inline */
+  .right-rail {
+    position: static;
+    top: auto;
+    gap: 10px;
+  }
+  .right-rail .rail-card,
+  .right-rail .collapsible {
+    width: 100%;
+  }
+
+  /* Sections + rows */
+  .section { gap: 8px; }
+  .section__head h2 { font-size: 22px; }
+  .alist { gap: 6px; }
+  .arow {
+    grid-template-columns: 6px 24px minmax(0,1fr) auto;
+    gap: 8px;
+    padding: 10px 8px;
+  }
+  .arow__due { text-align: right; min-width: 0; }
+  .arow__due-day, .arow__due-time { font-size: 11px; }
+  .arow__badges { display: none; }
+  .arow__actions { display: none; }
+  .arow__title { font-size: 14.5px; line-height: 1.35; }
+  .arow__meta { font-size: 11.5px; flex-wrap: wrap; }
+
+  /* Masthead */
+  .masthead__headline { font-size: 56px; }
+  .masthead__day { font-size: 64px; }
+  .masthead__sub { font-size: 13px; }
+  .bynumbers__row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat__big { font-size: 28px; }
+
+  /* Chip bar */
+  .chipbar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .chipbar::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; min-height: 36px; }
+
+  /* Deadline strip */
+  .dstrip__rail { gap: 4px; }
+  .dstrip__col { min-width: 0; }
+  .dstrip__bar { min-height: 6px; }
+
+  /* Up next */
+  .upnext { grid-template-columns: 1fr; gap: 8px; padding: 14px; }
+  .upnext__cta { flex-wrap: wrap; gap: 6px; }
+
+  /* Drawer fullscreen */
+  .scrim { backdrop-filter: blur(1px); }
+  .drawer {
+    width: 100%;
+    border-left: 0;
+    top: 0; bottom: 0; left: 0; right: 0;
+    animation: slide-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .drawer__head { padding: 14px 14px 12px; }
+  .drawer__head h2 { font-size: 19px; }
+  .drawer__body { padding: 14px; gap: 14px; }
+  .drawer__foot {
+    flex-wrap: wrap; gap: 6px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .drawer__foot .btn { flex: 1 1 calc(50% - 4px); min-height: 44px; }
+  .detail-grid {
+    grid-template-columns: 1fr;
+    row-gap: 2px;
+    column-gap: 0;
+  }
+  .detail-grid dt { margin-top: 8px; }
+  .detail-grid dd {
+    margin: 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @keyframes slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* Page header */
+  .page-header { gap: 10px; }
+  .page-header h1 { font-size: 28px; }
+  .page-header__sub { font-size: 13px; }
+  .page-header__actions { flex-wrap: wrap; gap: 6px; }
+
+  /* Calendar grid hidden on phone */
+  .cal__grid { display: none; }
+
+  /* Card grids → single column */
+  .source-grid { grid-template-columns: 1fr; }
+  .review-grid { grid-template-columns: 1fr; }
+  .course-grid { grid-template-columns: 1fr; }
+  .settings-grid { grid-template-columns: 1fr; }
+  .scard, .rcard, .ccard { padding: 14px; }
+
+  /* Tweaks panel */
+  .twk-panel { display: none !important; }
+
+  /* Tap targets */
+  .btn { min-height: 36px; }
+  .btn--sm { min-height: 32px; }
+  .tabs__btn { min-height: 40px; padding: 8px 12px; }
+
+  .folio { flex-direction: column; gap: 4px; align-items: center; text-align: center; font-size: 11px; }
+}
+
+/* ============================================================
+   SMALL PHONE (≤480px) — extra-tight
+   ============================================================ */
+@media (max-width: 480px) {
+  .workspace { padding: 10px; }
+  .topbar__name { font-size: 26px; }
+  .masthead__headline { font-size: 44px; }
+  .masthead__day { font-size: 48px; }
+  .bynumbers__row { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .arow { grid-template-columns: 4px 22px minmax(0,1fr) auto; gap: 6px; padding: 9px 6px; }
+  .arow__title { font-size: 14px; }
 }

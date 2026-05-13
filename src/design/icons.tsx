@@ -46,6 +46,7 @@ const ICON_PATHS = {
   chevronLeft:  <><path d="M15 6l-6 6 6 6"/></>,
   chevronRight: <><path d="M9 6l6 6-6 6"/></>,
   chevronDown:  <><path d="M6 9l6 6 6-6"/></>,
+  chevronUp:    <><path d="M6 15l6-6 6 6"/></>,
   x:           <><path d="M6 6l12 12M18 6L6 18"/></>,
   link:        <><path d="M10 14a4 4 0 0 1 0-6l3-3a4 4 0 0 1 6 6l-1.5 1.5"/><path d="M14 10a4 4 0 0 1 0 6l-3 3a4 4 0 0 1-6-6l1.5-1.5"/></>,
   clock:       <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,

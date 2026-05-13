@@ -2,7 +2,7 @@
 import React from "react";
 const g = globalThis as any;
 g.React = React;
-const { Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, EmptyState, Menu, MenuItem, AssignmentRow, COURSES, ASSIGNMENTS, SOURCES, TODAY, getCourse, getAssignment, formatDueRelative, formatDay, formatTime, formatLong, bucketize, SOURCE_LABEL, SOURCE_ICON, DOW, MONTHS, parseQuickAdd } = g;
+const { Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, EmptyState, Menu, MenuItem, AssignmentRow, Collapsible, useIsMobile, COURSES, ASSIGNMENTS, SOURCES, TODAY, getCourse, getAssignment, formatDueRelative, formatDay, formatTime, formatLong, bucketize, SOURCE_LABEL, SOURCE_ICON, DOW, MONTHS, parseQuickAdd, CONFIDENCE_PRESENT } = g;
 
 /* global React, Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, EmptyState, Menu, MenuItem, AssignmentRow,
    COURSES, ASSIGNMENTS, SOURCES, TODAY, getCourse, getAssignment, formatDueRelative, formatDay, formatTime, formatLong, bucketize, SOURCE_LABEL, SOURCE_ICON, DOW, MONTHS, parseQuickAdd */
@@ -529,6 +529,32 @@ function reminderHealth(notificationSettings) {
   };
 }
 
+function RailCard({ title, badge, headRight, defaultOpen = false, children }) {
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    return (
+      <Collapsible
+        mobileOnly
+        title={title}
+        badge={badge != null && typeof badge !== "object" ? badge : null}
+        defaultOpen={defaultOpen}
+        className="card rail-card"
+      >
+        {children}
+      </Collapsible>
+    );
+  }
+  return (
+    <div className="card rail-card">
+      <div className="rail-card__head">
+        <h3>{title}</h3>
+        {headRight ? headRight : (badge != null ? <Badge>{badge}</Badge> : null)}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function RightRail({ assignments, onNav, onOpen, onSync, notificationSettings }) {
   const buckets = bucketize(assignments);
   const counts = {
@@ -558,11 +584,7 @@ function RightRail({ assignments, onNav, onOpen, onSync, notificationSettings })
   return (
     <aside className="right-rail" aria-label="Assistant panel">
       {/* Workload */}
-      <div className="card rail-card">
-        <div className="rail-card__head">
-          <h3>Workload · 7 days</h3>
-          <Badge>{workload.reduce((s,w) => s + w.count, 0)} due</Badge>
-        </div>
+      <RailCard title="Workload · 7 days" badge={`${workload.reduce((s,w) => s + w.count, 0)} due`} defaultOpen>
         <div className="workload" aria-hidden="true">
           {workload.map((w, i) => {
             const today = i === 0;
@@ -586,14 +608,10 @@ function RightRail({ assignments, onNav, onOpen, onSync, notificationSettings })
             return max ? `${DOW[max.dt.getDay()]} (${max.count})` : "—";
           })()}</span>
         </div>
-      </div>
+      </RailCard>
 
       {/* Sync status */}
-      <div className="card rail-card">
-        <div className="rail-card__head">
-          <h3>Sync status</h3>
-          <Button variant="ghost" size="sm" icon="refresh" aria-label="Refresh all" onClick={onSync} />
-        </div>
+      <RailCard title="Sync status" headRight={<Button variant="ghost" size="sm" icon="refresh" aria-label="Refresh all" onClick={onSync} />}>
         <div className="sync-list">
           {SOURCES.slice(0, 5).map(s => (
             <div className="sync-row" key={s.id}>
@@ -609,13 +627,10 @@ function RightRail({ assignments, onNav, onOpen, onSync, notificationSettings })
         <Button variant="ghost" size="sm" iconRight="chevronRight" onClick={() => onNav("sources")} style={{ justifySelf: "start" }}>
           Manage sources
         </Button>
-      </div>
+      </RailCard>
 
       {/* Next deadlines */}
-      <div className="card rail-card">
-        <div className="rail-card__head">
-          <h3>Next deadlines</h3>
-        </div>
+      <RailCard title="Next deadlines">
         <div className="deadlines">
           {next3.map(a => {
             const dt = new Date(a.dueAt);
@@ -638,14 +653,10 @@ function RightRail({ assignments, onNav, onOpen, onSync, notificationSettings })
             );
           })}
         </div>
-      </div>
+      </RailCard>
 
       {/* Confidence health */}
-      <div className="card rail-card">
-        <div className="rail-card__head">
-          <h3>Confidence</h3>
-          <Badge>{Math.round(counts.confirmed / total * 100)}%</Badge>
-        </div>
+      <RailCard title="Confidence" badge={`${Math.round(counts.confirmed / total * 100)}%`}>
         <div className="health-bar" aria-hidden="true">
           <span className="h-confirmed" style={{ flex: counts.confirmed }} />
           <span className="h-probable"  style={{ flex: counts.probable }} />
@@ -665,13 +676,10 @@ function RightRail({ assignments, onNav, onOpen, onSync, notificationSettings })
             <b>Needs review</b><span>{counts.review}</span>
           </div>
         </div>
-      </div>
+      </RailCard>
 
       {/* Reminders */}
-      <div className="card rail-card">
-        <div className="rail-card__head">
-          <h3>Reminder health</h3>
-        </div>
+      <RailCard title="Reminder health">
         <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ color: "var(--text-muted)" }}>Email reminders</span>
@@ -686,7 +694,7 @@ function RightRail({ assignments, onNav, onOpen, onSync, notificationSettings })
             <Badge>{notificationSettings?.pushSubscriptionCount || 0}</Badge>
           </div>
         </div>
-      </div>
+      </RailCard>
     </aside>
   );
 }
@@ -798,8 +806,7 @@ function AssignmentDetail({ a, onClose, onToggle, onOpenSource, onArchive, onDel
           </section>
 
           {/* Reminders */}
-          <section className="detail-section">
-            <h3>Reminders</h3>
+          <Collapsible mobileOnly title="Reminders" className="detail-section detail-section--collapsible">
             <div style={{ display: "grid", gap: 6 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
                 <span style={{ fontSize: 13 }}>Email · 1 day before</span>
@@ -813,11 +820,10 @@ function AssignmentDetail({ a, onClose, onToggle, onOpenSource, onArchive, onDel
             <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--text-muted)" }}>
               Defaults applied to every assignment. Adjust the channel toggles in Settings → Reminders.
             </p>
-          </section>
+          </Collapsible>
 
           {a.notes ? (
-            <section className="detail-section">
-              <h3>Notes</h3>
+            <Collapsible mobileOnly title="Notes" className="detail-section detail-section--collapsible">
               <div style={{
                 padding: 14, border: "1px solid var(--border)", borderRadius: 8,
                 fontSize: 14, lineHeight: 1.55,
@@ -826,7 +832,7 @@ function AssignmentDetail({ a, onClose, onToggle, onOpenSource, onArchive, onDel
               }}>
                 {a.notes}
               </div>
-            </section>
+            </Collapsible>
           ) : null}
         </div>
 

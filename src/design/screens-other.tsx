@@ -2,7 +2,7 @@
 import React from "react";
 const g = globalThis as any;
 g.React = React;
-const { Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, Search, EmptyState, Menu, MenuItem, AssignmentRow, COURSES, ASSIGNMENTS, SOURCES, TODAY, getCourse, getAssignment, formatDueRelative, formatDay, formatTime, formatLong, bucketize, SOURCE_LABEL, SOURCE_ICON, DOW, MONTHS } = g;
+const { Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, Search, EmptyState, Menu, MenuItem, AssignmentRow, Collapsible, useIsMobile, COURSES, ASSIGNMENTS, SOURCES, TODAY, getCourse, getAssignment, formatDueRelative, formatDay, formatTime, formatLong, bucketize, SOURCE_LABEL, SOURCE_ICON, DOW, MONTHS } = g;
 
 /* global React, Icon, Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch, Tabs, Toggle, Search, EmptyState, Menu, MenuItem, AssignmentRow,
    COURSES, ASSIGNMENTS, SOURCES, TODAY, getCourse, getAssignment, formatDueRelative, formatDay, formatTime, formatLong, bucketize, SOURCE_LABEL, SOURCE_ICON, DOW, MONTHS */
@@ -240,6 +240,7 @@ function SourcesPage({ onSync, syncStatus, onUpload } = {}) {
 // Calendar Page (Month + Week)
 // ============================================================
 function CalendarPage({ assignments, onOpen }) {
+  const isMobile = useIsMobile();
   const [view, setView] = useStateO("month");
   const [cursor, setCursor] = useStateO(() => {
     const t = new Date(TODAY);
@@ -247,12 +248,13 @@ function CalendarPage({ assignments, onOpen }) {
     return t;
   });
 
+  const effectiveView = isMobile ? "agenda" : view;
   const monthLabel = `${MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}`;
 
   function shift(dir) {
     const nx = new Date(cursor);
-    if (view === "month") nx.setMonth(nx.getMonth() + dir);
-    else nx.setDate(nx.getDate() + dir * 7);
+    if (effectiveView === "week") nx.setDate(nx.getDate() + dir * 7);
+    else nx.setMonth(nx.getMonth() + dir);
     setCursor(nx);
   }
 
@@ -265,17 +267,89 @@ function CalendarPage({ assignments, onOpen }) {
           <p className="page-header__sub">All courses, every source. Click any item to open its details.</p>
         </div>
         <div className="page-header__actions">
-          <Tabs value={view} onChange={setView} options={[
-            { label: "Month", value: "month" },
-            { label: "Week", value: "week" },
-          ]} />
+          {!isMobile ? (
+            <Tabs value={view} onChange={setView} options={[
+              { label: "Month", value: "month" },
+              { label: "Week", value: "week" },
+            ]} />
+          ) : null}
           <Button variant="ghost" size="sm" icon="chevronLeft" aria-label="Previous" onClick={() => shift(-1)} />
           <Button size="sm" onClick={() => setCursor(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1))}>Today</Button>
           <Button variant="ghost" size="sm" icon="chevronRight" aria-label="Next" onClick={() => shift(1)} />
         </div>
       </header>
 
-      {view === "month" ? <MonthView cursor={cursor} assignments={assignments} onOpen={onOpen} /> : <WeekView cursor={cursor} assignments={assignments} onOpen={onOpen} />}
+      {effectiveView === "agenda"
+        ? <AgendaView cursor={cursor} assignments={assignments} onOpen={onOpen} />
+        : effectiveView === "month"
+          ? <MonthView cursor={cursor} assignments={assignments} onOpen={onOpen} />
+          : <WeekView cursor={cursor} assignments={assignments} onOpen={onOpen} />}
+    </div>
+  );
+}
+
+function AgendaView({ cursor, assignments, onOpen }) {
+  const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const last  = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59, 59);
+  const todayKey = new Date(TODAY).toDateString();
+
+  const groups = useMemoO(() => {
+    const map = new Map();
+    for (const a of assignments) {
+      const dt = new Date(a.dueAt);
+      if (dt < first || dt > last) continue;
+      const key = dt.toDateString();
+      if (!map.has(key)) map.set(key, { dt: new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()), items: [] });
+      map.get(key).items.push(a);
+    }
+    const arr = Array.from(map.values()).sort((a, b) => a.dt - b.dt);
+    arr.forEach(g => g.items.sort((x, y) => new Date(x.dueAt) - new Date(y.dueAt)));
+    return arr;
+  }, [assignments, cursor]);
+
+  if (groups.length === 0) {
+    return <EmptyState icon="calendar" title="Nothing scheduled this month" body="Try a different month, or check your sources." />;
+  }
+
+  return (
+    <div className="agenda">
+      {groups.map(g => {
+        const isToday = g.dt.toDateString() === todayKey;
+        return (
+          <section key={g.dt.toISOString()} className={`agenda__day ${isToday ? "agenda__day--today" : ""}`}>
+            <header className="agenda__head">
+              <span className="agenda__dow">{DOW[g.dt.getDay()]}</span>
+              <span className="agenda__date">
+                <b>{g.dt.getDate()}</b>
+                <span>{MONTHS[g.dt.getMonth()].slice(0,3)}</span>
+              </span>
+              {isToday ? <span className="agenda__today-tag">Today</span> : null}
+              <span className="agenda__count">{g.items.length} {g.items.length === 1 ? "item" : "items"}</span>
+            </header>
+            <ul className="agenda__list">
+              {g.items.map(a => {
+                const c = getCourse(a.courseId);
+                return (
+                  <li key={a.id}>
+                    <button className="agenda__item" onClick={() => onOpen(a)}>
+                      <span className={`agenda__rail color-${c.color}`} aria-hidden="true" />
+                      <span>
+                        <span className="agenda__title">{a.title}</span>
+                        <span className="agenda__meta">
+                          <CourseSwatch color={c.color} kind="dot" />
+                          <span>{c.code}</span>
+                          <span className="agenda__sep">·</span>
+                          <span>{formatTime(a.dueAt)}</span>
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -537,6 +611,31 @@ function SettingsPage({
     { id: "devices",    label: "Devices" },
     { id: "account",    label: "Account" },
   ];
+  const isMobile = useIsMobile();
+  const showSection = (id) => isMobile || section === id;
+  const Wrap = ({ id, title, headRight, children }) => {
+    if (isMobile) {
+      return (
+        <Collapsible
+          mobileOnly
+          title={title}
+          className="settings-section settings-section--collapsible"
+          defaultOpen={id === "appearance"}
+        >
+          {children}
+        </Collapsible>
+      );
+    }
+    return (
+      <>
+        <div className="settings-section__head">
+          <h2>{title}</h2>
+          {headRight}
+        </div>
+        {children}
+      </>
+    );
+  };
 
   return (
     <div className="main">
@@ -549,22 +648,21 @@ function SettingsPage({
       </header>
 
       <div className="settings-grid">
-        <nav className="settings-nav" aria-label="Settings sections">
-          {sections.map(s => (
-            <button key={s.id}
-                    aria-current={section === s.id}
-                    onClick={() => setSection(s.id)}>
-              {s.label}
-            </button>
-          ))}
-        </nav>
+        {!isMobile ? (
+          <nav className="settings-nav" aria-label="Settings sections">
+            {sections.map(s => (
+              <button key={s.id}
+                      aria-current={section === s.id}
+                      onClick={() => setSection(s.id)}>
+                {s.label}
+              </button>
+            ))}
+          </nav>
+        ) : null}
 
         <div className="settings-section">
-          {section === "appearance" ? (
-            <>
-              <div className="settings-section__head">
-                <h2>Appearance</h2>
-              </div>
+          {showSection("appearance") ? (
+            <Wrap id="appearance" title="Appearance">
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="Theme"
                       sub="Light keeps the editorial cream paper. Dark inverts to ink. System follows your OS."
@@ -590,15 +688,11 @@ function SettingsPage({
                         </div>
                       } />
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "reminders" ? (
-            <>
-              <div className="settings-section__head">
-                <h2>Reminders</h2>
-                <SavedPip stamp={savedStamp} />
-              </div>
+          {showSection("reminders") ? (
+            <Wrap id="reminders" title="Reminders" headRight={<SavedPip stamp={savedStamp} />}>
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="Email · 1 day before"
                       sub={emailConfigured
@@ -627,14 +721,11 @@ function SettingsPage({
                         ? <Toggle checked={Boolean(prefs.quiet_hours_enabled)} onChange={(value) => patch({ quiet_hours_enabled: value })} />
                         : <Badge>Loading</Badge>} />
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "devices" ? (
-            <>
-              <div className="settings-section__head">
-                <h2>Devices</h2>
-              </div>
+          {showSection("devices") ? (
+            <Wrap id="devices" title="Devices">
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="This device"
                       sub={`${pushStatus}${notificationSettings?.pushSubscriptionCount ? ` · ${notificationSettings.pushSubscriptionCount} device${notificationSettings.pushSubscriptionCount === 1 ? "" : "s"} registered` : ""}`}
@@ -659,14 +750,11 @@ function SettingsPage({
                         {notificationBusy ? "Sending…" : "Send test"}
                       </Button>} />
               </div>
-            </>
+            </Wrap>
           ) : null}
 
-          {section === "account" ? (
-            <>
-              <div className="settings-section__head">
-                <h2>Account</h2>
-              </div>
+          {showSection("account") ? (
+            <Wrap id="account" title="Account">
               <div className="card" style={{ padding: "0 16px" }}>
                 <SRow title="Signed in as"
                       sub={userEmail || "—"}
@@ -677,7 +765,7 @@ function SettingsPage({
                         ctrl={<Badge>{prefs.timezone}</Badge>} />
                 ) : null}
               </div>
-            </>
+            </Wrap>
           ) : null}
         </div>
       </div>

@@ -79,6 +79,49 @@ function Tabs({ value, onChange, options }) {
   );
 }
 
+// ---------- useIsMobile ----------
+function useIsMobile(query = "(max-width: 768px)") {
+  const [m, setM] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia ? window.matchMedia(query).matches : false
+  );
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia(query);
+    const h = (e) => setM(e.matches);
+    if (mq.addEventListener) mq.addEventListener("change", h);
+    else mq.addListener(h);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", h);
+      else mq.removeListener(h);
+    };
+  }, [query]);
+  return m;
+}
+
+// ---------- Collapsible ----------
+function Collapsible({ title, defaultOpen = false, badge, children, mobileOnly = false, className = "" }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const cls = ["collapsible"];
+  if (mobileOnly) cls.push("collapsible--mobile-only");
+  if (open) cls.push("is-open");
+  if (className) cls.push(className);
+  return (
+    <section className={cls.join(" ")}>
+      <button
+        type="button"
+        className="collapsible__head"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="collapsible__title">{title}</span>
+        {badge !== undefined && badge !== null ? <span className="collapsible__badge">{badge}</span> : null}
+        <Icon name={open ? "chevronUp" : "chevronDown"} size={14} />
+      </button>
+      <div className="collapsible__body">{children}</div>
+    </section>
+  );
+}
+
 // ---------- Toggle ----------
 function Toggle({ checked, onChange, label, id }) {
   const inputId = id || `t-${Math.random().toString(36).slice(2,8)}`;
@@ -235,4 +278,5 @@ function AssignmentRow({ a, course, onToggle, onOpen, dense }) {
 Object.assign(window, {
   Button, Badge, ConfidenceBadge, SourceBadge, CourseSwatch,
   Tabs, Toggle, Search, EmptyState, Menu, MenuItem, AssignmentRow,
+  Collapsible, useIsMobile,
 });

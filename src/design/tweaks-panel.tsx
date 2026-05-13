@@ -189,6 +189,22 @@ function useTweaks(defaults) {
 // flips off in lockstep; the host echoes __deactivate_edit_mode back which
 // is what actually hides the panel.
 function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }) {
+  const [isPhone, setIsPhone] = React.useState(
+    () => typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 768px)').matches
+      : false
+  );
+  React.useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const h = (e) => setIsPhone(e.matches);
+    if (mq.addEventListener) mq.addEventListener('change', h);
+    else mq.addListener(h);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', h);
+      else mq.removeListener(h);
+    };
+  }, []);
   const [open, setOpen] = React.useState(false);
   const dragRef = React.useRef(null);
   // Auto-inject a rail toggle when a <deck-stage> is on the page. The
@@ -291,6 +307,7 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }) {
     window.addEventListener('mouseup', up);
   };
 
+  if (isPhone) return null;
   if (!open) return null;
   return (
     <>
