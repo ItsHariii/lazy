@@ -1,6 +1,7 @@
-export default function handler(_req: Request): Response {
-  return new Response(JSON.stringify({ ok: true, ts: Date.now() }), {
-    status: 200,
-    headers: { "content-type": "application/json" },
-  });
+import type { IncomingMessage, ServerResponse } from "node:http";
+
+export default function handler(_req: IncomingMessage, res: ServerResponse) {
+  res.statusCode = 200;
+  res.setHeader("content-type", "application/json");
+  res.end(JSON.stringify({ ok: true, ts: Date.now() }));
 }
