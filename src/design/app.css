@@ -238,6 +238,7 @@ input:focus-visible,
 }
 .topbar__link[aria-current="page"] svg { color: var(--text); }
 .topbar__link svg { display: none; }
+.topbar__link-label { display: inline; }
 .topbar__count {
   display: inline-grid; place-items: center;
   min-width: 16px; height: 16px;
@@ -382,8 +383,34 @@ input:focus-visible,
   .topbar__right { gap: 6px; }
   .topbar__left .statuschip span { display: none; }
 }
+@media (max-width: 760px) {
+  .topbar__nav {
+    gap: 4px;
+    padding-top: 6px;
+    justify-content: space-around;
+    width: 100%;
+  }
+  .topbar__link {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 4px;
+    letter-spacing: 0;
+  }
+  .topbar__link svg { display: inline-block; }
+  .topbar__link .topbar__link-label { display: none; }
+  .topbar__link--primary .topbar__link-label { display: none; }
+  .topbar__link--primary { padding: 6px 8px; }
+  .topbar__count {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    margin-left: 0;
+    transform: translateX(35%);
+  }
+}
 @media (max-width: 560px) {
   .topbar__left { display: none; }
+  .topbar__name { font-size: 32px; }
 }
 /* ---------- Card / row entrance stagger ---------- */
 .alist .arow {

@@ -165,8 +165,9 @@ function Topbar({ active, onNav, counts, syncStatus, lastSyncedAt, onSync, onUpl
             className="topbar__link topbar__link--primary"
             onClick={() => setNewMenuOpen(open => !open)}
             title="Create assignments"
+            aria-label="Create assignments"
           >
-            <Icon name="plus" size={13} /> <span style={{ marginLeft: 4 }}>New</span>
+            <Icon name="plus" size={13} /> <span className="topbar__link-label" style={{ marginLeft: 4 }}>New</span>
           </button>
           {newMenuOpen ? (
             <div className="topbar__menu" role="menu">
@@ -222,8 +223,11 @@ function Topbar({ active, onNav, counts, syncStatus, lastSyncedAt, onSync, onUpl
             <button key={item.id}
                     className="topbar__link"
                     aria-current={active === item.id ? "page" : undefined}
+                    aria-label={item.label}
+                    title={item.label}
                     onClick={() => onNav(item.id)}>
-              <span>{item.label}</span>
+              <Icon name={item.icon} size={18} />
+              <span className="topbar__link-label">{item.label}</span>
               {c ? <span className="topbar__count">{c}</span> : null}
             </button>
           );
