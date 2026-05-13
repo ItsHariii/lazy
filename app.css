@@ -2676,9 +2676,49 @@ hr.divider { border: 0; border-top: 1px solid var(--border); margin: 0; }
   }
   .topbar::before, .topbar::after { left: 14px; right: 14px; }
   .topbar__brand { grid-column: 1; }
-  .topbar__name { font-size: 30px; line-height: 1; }
-  .topbar__kicker { font-size: 10.5px; }
-  .topbar__left, .topbar__right { display: none; }
+  .topbar__name { font-size: 26px; line-height: 1; }
+  .topbar__kicker { display: none; }
+  .topbar__left { display: none; }
+  .topbar__right {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    gap: 6px;
+  }
+  .topbar__right .topbar__theme,
+  .topbar__right .topbar__profile {
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+  }
+  .topbar__right .topbar__link--primary {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-height: 34px;
+  }
+  .topbar__menu {
+    position: fixed;
+    right: 12px;
+    left: 12px;
+    top: 64px;
+    width: auto;
+    max-width: none;
+    z-index: 60;
+  }
+  .topbar {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 8px;
+    row-gap: 4px;
+  }
+  .topbar__brand {
+    grid-column: 1;
+    grid-row: 1;
+    align-items: flex-start;
+    text-align: left;
+  }
 
   /* Topbar nav → bottom tab bar */
   .topbar__nav {
@@ -2757,8 +2797,22 @@ hr.divider { border: 0; border-top: 1px solid var(--border); margin: 0; }
   .arow__meta { font-size: 11.5px; flex-wrap: wrap; }
 
   /* Editorial masthead — shrink */
-  .masthead__headline { font-size: 56px; }
-  .masthead__day { font-size: 64px; }
+  .masthead__title-block {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .masthead__date {
+    border-right: 0;
+    padding-right: 0;
+    grid-template-columns: auto auto;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+  .masthead__topline { flex-wrap: wrap; gap: 6px; font-size: 11px; }
+  .masthead__month { font-size: 32px; }
+  .masthead__day { font-size: 56px; }
+  .masthead__headline { font-size: 56px; gap: 8px; }
+  .masthead__year { margin-bottom: 4px; }
   .masthead__sub { font-size: 13px; }
   .bynumbers__row { grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat__big { font-size: 28px; }
