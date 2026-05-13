@@ -8,7 +8,13 @@ import { preflightBudget, recordUsage, estimateTokens } from "../lib/costGuard";
 import { pickColor, type NormalizedAssignment, type NormalizedCourse } from "../lib/normalize";
 
 const require = createRequire(import.meta.url);
-const pdfParse: (buf: Buffer) => Promise<{ text: string }> = require("pdf-parse");
+let pdfParseImpl: ((buf: Buffer) => Promise<{ text: string }>) | null = null;
+function getPdfParse() {
+  if (!pdfParseImpl) {
+    pdfParseImpl = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+  }
+  return pdfParseImpl;
+}
 
 export const syllabusRoute = new Hono();
 
@@ -52,7 +58,7 @@ async function extractText(file: File): Promise<string> {
   const buf = Buffer.from(await file.arrayBuffer());
   const name = file.name.toLowerCase();
   if (name.endsWith(".pdf")) {
-    const out = await pdfParse(buf);
+    const out = await getPdfParse()(buf);
     return out.text;
   }
   if (name.endsWith(".docx")) {
