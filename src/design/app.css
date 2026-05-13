@@ -173,6 +173,7 @@ input:focus-visible,
   left: 28px; right: 28px;
   height: 1px;
   background: var(--text);
+  pointer-events: none;
 }
 .topbar::before { top: 6px; }
 .topbar::after  { bottom: 0; }
@@ -385,16 +386,18 @@ input:focus-visible,
 }
 @media (max-width: 760px) {
   .topbar__nav {
-    gap: 4px;
-    padding-top: 6px;
-    justify-content: space-around;
-    width: 100%;
+    gap: 14px;
+    padding-top: 4px;
+    justify-content: center;
+    width: auto;
+    overflow-x: visible;
   }
   .topbar__link {
-    flex: 1;
+    flex: 0 0 auto;
     justify-content: center;
-    padding: 8px 4px;
+    padding: 4px 2px;
     letter-spacing: 0;
+    border-bottom-width: 1px;
   }
   .topbar__link svg { display: inline-block; }
   .topbar__link .topbar__link-label { display: none; }
@@ -402,10 +405,9 @@ input:focus-visible,
   .topbar__link--primary { padding: 6px 8px; }
   .topbar__count {
     position: absolute;
-    top: 2px;
-    right: 0;
+    top: -2px;
+    right: -6px;
     margin-left: 0;
-    transform: translateX(35%);
   }
 }
 @media (max-width: 560px) {
