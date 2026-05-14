@@ -176,7 +176,7 @@ input:focus-visible,
   pointer-events: none;
 }
 .topbar::before { top: 6px; }
-.topbar::after  { bottom: 0; }
+.topbar::after  { bottom: 0; display: none; }
 .topbar__brand {
   display: flex; flex-direction: column; gap: 4px; align-items: center;
   grid-column: 2;
@@ -202,15 +202,23 @@ input:focus-visible,
 }
 
 .topbar__nav {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  justify-self: center;
   display: flex;
+  justify-content: center;
   gap: 18px;
   background: transparent;
   border: 0;
-  padding: 8px 0 0;
+  padding: 8px 28px 8px;
   border-radius: 0;
+  position: relative;
+}
+.topbar__nav::after {
+  content: "";
+  position: absolute;
+  left: 28px; right: 28px;
+  bottom: 0;
+  height: 1px;
+  background: var(--text);
+  pointer-events: none;
 }
 .topbar__link {
   display: inline-flex;
@@ -3656,6 +3664,8 @@ body[data-theme="dark"] .auth__segment button[aria-pressed="true"]:hover {
     overflow: hidden;
   }
   .topbar::before, .topbar::after { left: 12px; right: 12px; }
+  .topbar::after { display: block; }
+  .topbar__nav::after { display: none; }
   .topbar__brand {
     grid-column: 1;
     grid-row: 1;

@@ -143,6 +143,7 @@ function Topbar({ active, onNav, counts, syncStatus, lastSyncedAt, onSync, onUpl
   }, []);
 
   return (
+    <>
     <header className="topbar">
       <div className="topbar__left">
         <Clock />
@@ -215,6 +216,7 @@ function Topbar({ active, onNav, counts, syncStatus, lastSyncedAt, onSync, onUpl
           <span className="topbar__avatar">{initials}</span>
         </button>
       </div>
+    </header>
 
       <nav className="topbar__nav" aria-label="Primary">
         {NAV_ITEMS.map(item => {
@@ -233,7 +235,7 @@ function Topbar({ active, onNav, counts, syncStatus, lastSyncedAt, onSync, onUpl
           );
         })}
       </nav>
-    </header>
+    </>
   );
 }
 
